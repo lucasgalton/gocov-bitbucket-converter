@@ -103,7 +103,21 @@ func (cov *Coverage) parseProfile(profile *Profile, prefix string) error {
 	for _, l := range lines {
 		partial := false
 		var sum int64 = 0
+		mergedBlocks := []*LineBlock{}
 		for _, b := range l.blocks {
+			var block *LineBlock
+			for _, mb := range mergedBlocks {
+				if mb.startCol == b.startCol && mb.endCol == b.endCol {
+					block = mb
+					block.count += b.count
+				}
+			}
+			if block == nil {
+				block = &LineBlock{startCol: b.startCol, endCol: b.endCol, count: b.count}
+				mergedBlocks = append(mergedBlocks, block)
+			}
+		}
+		for _, b := range mergedBlocks {
 			if b.count == 0 {
 				partial = true
 			}
